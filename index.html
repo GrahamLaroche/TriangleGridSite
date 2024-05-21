@@ -1,0 +1,189 @@
+<!--
+File: test.html
+GUI Assignment: First Web Page
+Graham Laroche, graham_laroche@student.uml.edu
+5/18/2024
+A short guide on making a grid of triangles.
+Includes a way to calculate both the center and the verticies of a triangle, given grid coordinates.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Triangle Grid Math</title>
+        <!-- Link CSS stylesheet-->
+        <link rel="stylesheet" type="text/css" href="css/style.css">
+    </head>
+    <body>
+        <!-- CSS Validation Icon-->
+        <p>
+            <a href="http://jigsaw.w3.org/css-validator/check/referer">
+                <img style="border:0;width:88px;height:31px"
+                    src="http://jigsaw.w3.org/css-validator/images/vcss-blue"
+                    alt="Valid CSS!" />
+            </a>
+        </p>
+        <div id="box">
+            <h1>How to Create a Triangle Grid</h1>
+            <p>
+                This is a guide on how to place equilateral triangles in a grid formation.
+                It is important to note that this guide makes 4 assumptions about this grid.
+                Your math may vary if slightly with a different implementation.
+                The first assumption is that triangles either point straight up or straight down.
+                The second is that Y coordinates increase as they go down, instead of decreasing.
+                The third and fourth assumption will be discussed later.
+            </p>
+            <h2>The Grid Coordinate System</h2>
+            <p>
+                There are a few ways to represent a triangles position in grid coordinates.
+                For our purposes, our triangle's grid position is represented by an A coordinate, a B coordinate, and the triangle's direction.
+                This coordinate system was adapted from
+                <a href="https://www.redblobgames.com/grids/parts/"> this guide</a>.
+            </p>
+            <img src="images/tri_coords.jpg" alt="Triangle Coordinates 1" width="310" height="200">
+            <p>
+                The triangles depicted above have their grid coordinates displayed in text.
+                The first 0 represents the A coordinate of both triangles, and the second 0 represents
+                the B coordinate of both triangles. The triangle's direction can either be UP or DOWN.
+                This can be represented as a 1 or a 0 if you would prefer. (All Triangles here have been
+                drawn with <a href="https://www.geogebra.org/geometry?lang=en"> GeoGebra </a> .)
+            </p>
+            <img src="images/tri_coords2.jpg" alt="Triangle Coordinates 2" width = "310" height="200">
+            <p>
+                The A coordinate is fairly intuitive to understand.
+                As you can see in the image above, the (1,0,UP) triangle is to the right of the 
+                (0,0,UP triangle). This makes it pretty similar to the X axis in cartesian coordinates.
+                However, with the B coordinate, you can see that the (0,1,UP) is down and to the right of
+                the (0,0,UP) triangle. This is something you have to account for when doing any math 
+                that turns grid coordinates into cartesian coordinates, as the B coordinate affects
+                both the X and Y axes.
+            </p>
+            <h2>Grid Coordinates to Cartesian Coordinates</h2>
+            <p>
+                To make the math easier to explain, let's establish some important constants and terms 
+                that we will be working with frequently when doing calculations with equalateral triangles.
+            </p>
+            <!-- Definition List for math / related triangle terms-->
+            <dl>
+                <dt><br>E</dt>
+                <dd>-The length of an edge of the triangle.</dd>
+                <dt><br>H</dt>
+                <dd>-The height of the triangle. This is equivalent to: Edge * sqrt(3) / 2.</dd>
+                <dt><br>Centroid</dt>
+                <dd>
+                    -The center point of an equilateral triangle. It is (1 / 3) * H distance away from 
+                    any edge, and (2 / 3) * H distance away from any vertex.
+                </dd>
+            </dl>
+            <p>
+                We will use these terms to find the centrdoid of a triangle in cartesian coordinates
+                based on its grid coordinates. For now we are going to ignore the Up/Down coordinate,
+                we can implement that math after we handle the A and B coordinates.
+                These calculations are based on the third assumption, that (0,0) in cartesian coordinates
+                is equivalent to the centroid of the (0,0,UP) triangle.
+                The X axis is affected by both the A and B coordinates, as we saw in the second image.
+                (1,0,UP) and (0,0,UP) are only one edge length apart. This means A contributes A * E
+                to the X axis. Meanwhile B contributes half an edge length, or B * E / 2
+                The Y axis is only affected by the B coordinate. (0,1,UP) and (0,0,UP) are only
+                one H apart, so B contributes B * H to the Y axis.<br>
+                The equations so far for calculating X and Y look like this:<br><br>
+                X = (A * E) + (B * E / 2)<br>
+                Y = (B * H)<br><br>
+            </p>
+            <p>
+                However, this isn't enough to calculate the positions, as we neglected the directional coordinate.
+                If a triangle is (0,0,DOWN), it needs to be moved E / 2 to the left of (0,0,UP).
+                Determining how it is moved on the Y axis is a little more complex. Keep in mind that
+                the centroid of a triangle is <b>not</b> placed at half the triangle's height.
+                The (0,0,DOWN) centroid actually ends up being (1 / 3) * H higher than the (0,0,UP) triangle.
+                Remember how the UP/DOWN coordinate can be represented as a 1 or 0?
+                We can use that in our final equations. In this case DOWN = 1, and UP = 0. Dir will be a variable
+                that represents the direction coordinate of the triangle.<br>
+                Our final equations look like this:<br><br>
+                X = (A * E) + (B * E / 2) + (Dir * -E / 2)<br>
+                Y = (B * H) + (Dir * -(1 / 3) * H)<br><br>
+            </p>
+            <p>
+                Knowing the center isn't actually as useful as finding the verticies, but I find it
+                makes the math for finding the verticies of a triangle a little simpler.
+            </p>
+            <h2>Calculating Vertex Positions</h2>
+            <img src="images/tri_wind.jpg" alt="Triangle Winding" width = "310" height="250">
+            <p>
+                The fourth assumption is that the verticies of the triangle are wound counter-clockwise.
+                The winding of your verticies is pretty important for things like graphics programming.
+                This means if your triangle is represented as a list of 3 points, the order those points
+                are in the list determines which way the triangle is wound. Since we have already calculated
+                the centroid's cartesian coordinates, Cx will be a variable that represents the centroid's X
+                component, and Cy will be a variable that represents the centroid's Y component.<br>
+                For an upwards facing triangle, the verticies can be calculated like so:<br><br>
+                V1 = (Cx , -(2 / 3) * H + Cy)<br>
+                V2 = (Cx - E / 2, (1 / 3) * H + Cy)<br>
+                V3 = (Cx + E / 2, (1 / 3) * H + Cy)<br><br>
+            </p>
+            <p>
+                For a downwards facing triangle, all you need to do is invert each of these points.
+                A sometimes useful property of calculating the points this way is that V2 and V3
+                always stay at the same height.
+            </p>
+            <h2>Example Calculations</h2>
+            <p>
+                That is about it for this guide on triangle math, but I will end this with a table of data
+                for a few triangles. Keep in mind, the Y axis increases downwards for this math. Plugging
+                this data straight into 
+                <a href="https://www.geogebra.org/geometry?lang=en"> GeoGebra </a>
+                or anything similar that expects Y to increase upwards will result in everything being upside-down.
+                <br><br>
+                For an edge length of 10:<br>
+            </p>
+            <!-- Data table for triangle with edge length of 10-->
+            <table>
+                <tr>
+                    <th>Grid Coordinate</th>
+                    <th>Vertex 1</th>
+                    <th>Vertex 2</th>
+                    <th>Vertex 3</th>
+                </tr>
+                <tr>
+                    <th>(0,0,UP)</th>
+                    <th>(0, -5.7735)</th>
+                    <th>(-5, 2.8868)</th>
+                    <th>(5, 2.8868)</th>
+                </tr>
+                <tr>
+                    <th>(0,0,DOWN)</th>
+                    <th>(-5, 2.8868)</th>
+                    <th>(0, -5.7735)</th>
+                    <th>(-10, -5.7735)</th>
+                </tr>
+                <tr>
+                    <th>(1,0,UP)</th>
+                    <th>(10, -5.7735)</th>
+                    <th>(5, 2.8868)</th>
+                    <th>(15, 2.8868)</th>
+                </tr>
+                <tr>
+                    <th>(1,0,DOWN)</th>
+                    <th>(5, 2.8868)</th>
+                    <th>(10, -5.7735)</th>
+                    <th>(0, -5.7735)</th>
+                </tr>
+                <tr>
+                    <th>(0,1,UP)</th>
+                    <th>(5, 2.8868)</th>
+                    <th>(0, 11.547)</th>
+                    <th>(10, 11.547)</th>
+                </tr>
+                <tr>
+                    <th>(0,1,DOWN)</th>
+                    <th>(0, 11.547)</th>
+                    <th>(5, 2.8868)</th>
+                    <th>(-5, 2.8868)</th>
+                </tr>
+            </table>
+        </div>
+    </body>
+</html>
+
+
